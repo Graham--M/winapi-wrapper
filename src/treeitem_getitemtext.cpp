@@ -3,17 +3,18 @@
 
 using namespace WinAPI;
 
-string TabControl::GetItemText( int nItem ) const
+tstring TreeItem::GetItemText() const
 {
-	string s;
+	tstring s;
 	const int len = 128;
 	s.resize( len + 1 );
 	s[0] = s[len] = 0;
-	TCITEM item;
-	item.mask = TCIF_TEXT;
+	TVITEM item;
+	item.mask = TVIF_HANDLE | TVIF_TEXT;
+	item.hItem = hitem;
 	item.pszText = &s[0];
 	item.cchTextMax = len;
-	GetItem( nItem, &item );
-	s.resize( strlen( s.data() ) );
+	GetItem( &item );
+	s.resize( _tcslen( s.data() ) );
 	return s;
 }

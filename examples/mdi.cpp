@@ -10,11 +10,11 @@ class DocumentWindow: public MDIChildWindow {
 public:
 	// Constructor creates the actual window
 	DocumentWindow( HWND hwndParent ) {
-		Create( "Document", hwndParent );
+		Create( _T("Document"), hwndParent );
 	}
 	// Paint "Hello, World!" during WM_PAINT
 	virtual void OnPaint() {
-		PaintDC( *this ).TextOut( WPoint(50,50), "Hello, World!" );
+		PaintDC( *this ).TextOut( WPoint(50,50), _T("Hello, World!") );
 	}
 };
 
@@ -23,7 +23,7 @@ class MainWindow: public MDIFrameWindow {
 public:
 	// Constructor creates the actual window (through CreateWindowEx)
 	MainWindow() {
-		Create( "Sample App" );
+		Create( _T("Sample App") );
 	}
 	// Command that creates MDI children
 	enum { ID_CREATE = 101 };
@@ -34,8 +34,8 @@ public:
 		menubar.Create();
 		Menu submenu;
 		submenu.Create();
-		submenu.Append( "&Create", ID_CREATE );
-		menubar.Append( "&Window", submenu );
+		submenu.Append( _T("&Create"), ID_CREATE );
+		menubar.Append( _T("&Window"), submenu );
 		SetMenu( menubar );
 
 		// Create client window and an MDI child

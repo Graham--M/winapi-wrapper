@@ -11,7 +11,7 @@ bool MDIFrameWindow::CreateClient( const RECT& rc, HMENU hMenu, int idFirstChild
 {
 	if ( ! client_wnd.IsCreated() ) {
 		CLIENTCREATESTRUCT ccs = { hMenu, idFirstChild };
-		return client_wnd.Create( "", "MDICLIENT", dwStyle, rc, *this, 0, dwExStyle, &ccs );
+		return client_wnd.Create( _T(""), _T("MDICLIENT"), dwStyle, rc, *this, 0, dwExStyle, &ccs );
 	} else
 		return true;
 }

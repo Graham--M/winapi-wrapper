@@ -3,9 +3,9 @@
 
 using namespace WinAPI;
 
-string GenericWindow::GetText() const
+tstring GenericWindow::GetText() const
 {
-	string s;
+	tstring s;
 	const int len = GetWindowTextLength( hWnd );
 	if ( len > 0 ) {
 		s.resize( len + 1 );

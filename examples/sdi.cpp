@@ -10,7 +10,7 @@ class MainWindow: public Window {
 public:
 	// Constructor creates the actual window (through CreateWindowEx)
 	MainWindow() {
-		Create( "Sample App" );
+		Create( _T("Sample App") );
 	}
 	// During window destruction the message queue is stopped
 	virtual void OnDestroy() {
@@ -18,7 +18,7 @@ public:
 	}
 	// Paint "Hello, World!" during WM_PAINT
 	virtual void OnPaint() {
-		PaintDC( *this ).TextOut( WPoint(50,50), "Hello, World!" );
+		PaintDC( *this ).TextOut( WPoint(50,50), _T("Hello, World!") );
 	}
 };
 

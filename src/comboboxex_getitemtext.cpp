@@ -3,9 +3,9 @@
 
 using namespace WinAPI;
 
-string ComboBoxEx::GetItemText( int nItem ) const
+tstring ComboBoxEx::GetItemText( int nItem ) const
 {
-	string s;
+	tstring s;
 	const int len = 128;
 	s.resize( len + 1 );
 	s[0] = s[len] = 0;
@@ -15,6 +15,6 @@ string ComboBoxEx::GetItemText( int nItem ) const
 	item.pszText = &s[0];
 	item.cchTextMax = len;
 	GetItem( &item );
-	s.resize( strlen( s.data() ) );
+	s.resize( _tcslen( s.data() ) );
 	return s;
 }

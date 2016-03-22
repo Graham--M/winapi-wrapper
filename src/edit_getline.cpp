@@ -3,9 +3,9 @@
 
 using namespace WinAPI;
 
-string Edit::GetLine( int nLine ) const
+tstring Edit::GetLine( int nLine ) const
 {
-	string s;
+	tstring s;
 	const int len = LineLength( LineIndex( nLine ) );
 	if ( len < 1 ) return s;
 	s.resize( len + 1 );

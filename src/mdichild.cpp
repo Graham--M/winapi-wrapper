@@ -9,9 +9,9 @@ bool MDIChildWindow::Create( LPCTSTR lpszWindowName, const MDIChildWindowClass& 
 							 DWORD dwExStyle, LPVOID lpParam, HINSTANCE hInstance )
 {
 	PASSLPARAM pass = { lpParam, this, &hWnd };
-	const char* class_name = wndClass;
+	const TCHAR* class_name = wndClass;
 	// the const_cast is a VS6 backwards compatibility issue
-	CreateMDIWindow( const_cast<char*>(class_name), const_cast<char*>(lpszWindowName), dwStyle, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, hWndParent, hInstance, reinterpret_cast<LPARAM>( &pass ) );
+	CreateMDIWindow( const_cast<TCHAR*>(class_name), const_cast<TCHAR*>(lpszWindowName), dwStyle, rc.left, rc.top, rc.right-rc.left, rc.bottom-rc.top, hWndParent, hInstance, reinterpret_cast<LPARAM>( &pass ) );
 	b_created = GenericWindow::IsCreated();
 	return b_created;
 }

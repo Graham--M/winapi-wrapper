@@ -36,5 +36,6 @@ namespace {
 
 USE_LIB_WINMAIN
 ```
+This example assumes the UNICODE macro isn't defined for simplicity's sake. The real example supports ASCII and and UNICODE chars.
 
 All modifications are made available under the origional license of the library (see `license.txt`).

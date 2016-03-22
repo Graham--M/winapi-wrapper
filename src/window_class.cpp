@@ -7,7 +7,7 @@ void WindowClass::Register( WNDPROC wndProc, UINT style, int cbClsExtra, int cbW
 {
 	static int cls_index = 0;
 	cls_index++;
-	wsprintf( szClassName, "Class%08X", cls_index );
+	wsprintf( szClassName, _T("Class%08X"), cls_index );
 	WNDCLASS wc = {
 		style,
 		wndProc,

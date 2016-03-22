@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by Multithreading_.rc
+// Used by mtdialog.rc
 //
 #define IDD_SAMPLE                      101
 #define IDC_PROGRESS                    1001

@@ -5,16 +5,14 @@
 #include <crtdbg.h>
 #endif
 
-using namespace WinAPI;
+namespace WinAPI {
 
 //
 // Default module handle. The old code used a hardcoded value assuming it
 // wouldn't change for the main executable but unfortunatly it eventually
 // did.
 //
-
 HINSTANCE g_hInstance = GetModuleHandle(NULL);
-
 
 //
 // Defining WinMain here complicates builds with g++ because unresolved symbols
@@ -36,3 +34,5 @@ int WINAPI Lib_WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCm
 		p_application->Run();
 	return 0;
 }
+
+} // namespace WinAPI

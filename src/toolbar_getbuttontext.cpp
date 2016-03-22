@@ -3,9 +3,9 @@
 
 using namespace WinAPI;
 
-string Toolbar::GetButtonText( int idCommand ) const
+tstring Toolbar::GetButtonText( int idCommand ) const
 {
-	string s;
+	tstring s;
 	const int len = 128;
 	s.resize( len + 1 );
 	s[0] = s[len] = 0;

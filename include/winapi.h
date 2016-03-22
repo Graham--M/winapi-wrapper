@@ -55,6 +55,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <shlobj.h>
+#include <Tchar.h>
 
 // Undefine Windows macros colliding with STL names
 #undef min
@@ -70,17 +71,19 @@
 #include <vector>
 #endif
 
+
+namespace WinAPI {
+
 // Defined module handle - Default value for hInstance when not supplied
 extern HINSTANCE g_hInstance;
 #ifndef __MODULE_HANDLE
 #define __MODULE_HANDLE g_hInstance
 #endif
 
-namespace WinAPI {
-
 #ifndef SKIP_STL
 using std::string;
 using std::vector;
+typedef std::basic_string<TCHAR> tstring;
 #endif
 
 /**********************************************************************************************
@@ -239,7 +242,7 @@ class FindFile: public NonCopyAble {
 	HANDLE hFindFile;
 	mutable WIN32_FIND_DATA data;
 public:
-	FindFile( LPCTSTR lpFileName = "*.*" ): hFindFile( INVALID_HANDLE_VALUE ) {
+	FindFile( LPCTSTR lpFileName = _T("*.*") ): hFindFile( INVALID_HANDLE_VALUE ) {
 		hFindFile = FindFirstFile( lpFileName, &data );
 	}
 	~FindFile() {
@@ -257,7 +260,7 @@ public:
 	const WIN32_FIND_DATA& GetFindData() const {
 		return data;
 	}
-	bool SetTo( LPCTSTR lpFileName = "*.*" ) {
+	bool SetTo( LPCTSTR lpFileName = _T("*.*") ) {
 		Close();
 		hFindFile = FindFirstFile( lpFileName, &data );
 		return IsOpen();
@@ -313,10 +316,10 @@ public:
 
 #ifndef SKIP_STL
 	class StringHandler {
-		vector<string>& filenames;
+		vector<tstring>& filenames;
 	public:
-		StringHandler( vector<string>& filenames ): filenames( filenames ) { }
-		void operator()( const WIN32_FIND_DATA& fd ) { filenames.push_back( string( fd.cFileName ) ); }
+		StringHandler( vector<tstring>& filenames ): filenames( filenames ) { }
+		void operator()( const WIN32_FIND_DATA& fd ) { filenames.push_back( tstring( fd.cFileName ) ); }
 	};
 
 	class FindDataHandler {
@@ -326,7 +329,7 @@ public:
 		void operator()( const WIN32_FIND_DATA& fd ) { files.push_back( fd ); }
 	};
 
-	void GetAll( vector<string>* p_files, FINDTYPE ft = ALL ) {
+	void GetAll( vector<tstring>* p_files, FINDTYPE ft = ALL ) {
 		assert( p_files != 0 );
 		p_files->clear();
 		StringHandler handler( *p_files );
@@ -338,7 +341,7 @@ public:
 		FindDataHandler handler( *p_files );
 		ForEach( handler, ft );
 	}
-	static void GetAll( LPCTSTR lpFileName, vector<string>* p_files, FINDTYPE ft = ALL ) {
+	static void GetAll( LPCTSTR lpFileName, vector<tstring>* p_files, FINDTYPE ft = ALL ) {
 		FindFile finder( lpFileName );
 		finder.GetAll( p_files, ft );
 	}
@@ -358,7 +361,7 @@ class FileMapping: public NonCopyAble {
 	HANDLE hMapping;
 public:
 	FileMapping(): hFile( INVALID_HANDLE_VALUE ), hMapping( NULL ) { }
-	FileMapping( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 ): hFile( INVALID_HANDLE_VALUE ), hMapping( NULL ) {
+	FileMapping( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCTSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 ): hFile( INVALID_HANDLE_VALUE ), hMapping( NULL ) {
 		SetTo( file, flProtect, dwMaximumSize, lpName, lpAttributes );
 	}
 	~FileMapping() {
@@ -367,8 +370,8 @@ public:
 	bool IsOpen() const {
 		return hMapping != NULL;
 	}
-	bool Open( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 );
-	bool SetTo( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 ) {
+	bool Open( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCTSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 );
+	bool SetTo( File& file, DWORD flProtect = PAGE_READWRITE, DWORD dwMaximumSize = 0, LPCTSTR lpName = 0, LPSECURITY_ATTRIBUTES lpAttributes = 0 ) {
 		return Open( file, flProtect, dwMaximumSize, lpName, lpAttributes );
 	}
 	void Close();
@@ -403,7 +406,7 @@ inline void FileMapping::Close()
 	}
 }
 
-inline bool FileMapping::Open( File& file, DWORD flProtect, DWORD dwMaximumSize, LPCSTR lpName, LPSECURITY_ATTRIBUTES lpAttributes )
+inline bool FileMapping::Open( File& file, DWORD flProtect, DWORD dwMaximumSize, LPCTSTR lpName, LPSECURITY_ATTRIBUTES lpAttributes )
 {
 	Close();
 	if ( ! file.IsOpen() )
@@ -661,46 +664,46 @@ public:
 		*this = st;
 	}
 #ifdef SKIP_STL
-	int FormatTime( char* lpTimeStr, int cchTimeStrLen, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
+	int FormatTime( TCHAR* lpTimeStr, int cchTimeStrLen, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
 		const SYSTEMTIME st = *this;
 		return GetTimeFormat( locale, dwFlags, &st, lpFormat, lpTimeStr, cchTimeStrLen );
 	}
-	static int FormatTime( const SYSTEMTIME& st, char* lpTimeStr, int cchTimeStrLen, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
+	static int FormatTime( const SYSTEMTIME& st, TCHAR* lpTimeStr, int cchTimeStrLen, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
 		return GetTimeFormat( locale, dwFlags, &st, lpFormat, lpTimeStr, cchTimeStrLen );
 	}
-	int FormatDate( char* lpDateStr, int cchDateStrLen, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
+	int FormatDate( TCHAR* lpDateStr, int cchDateStrLen, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
 		const SYSTEMTIME st = *this;
 		return GetDateFormat( locale, dwFlags, &st, lpFormat, lpDateStr, cchDateStrLen );
 	}
-	static int FormatDate( const SYSTEMTIME& st, char* lpDateStr, int cchDateStrLen, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
+	static int FormatDate( const SYSTEMTIME& st, TCHAR* lpDateStr, int cchDateStrLen, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
 		return GetDateFormat( locale, dwFlags, &st, lpFormat, lpDateStr, cchDateStrLen );
 	}
 #else
-	string FormatTime( DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
-		char s[64];
+	tstring FormatTime( DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
+		TCHAR s[64];
 		const SYSTEMTIME st = *this;
 		const int count = GetTimeFormat( locale, dwFlags, &st, lpFormat, s, 64 ) - 1;
-		if ( count <= 0 ) return "";
-		return string( s, count );
+		if ( count <= 0 ) return _T("");
+		return tstring( s, count );
 	}
-	static string FormatTime( const SYSTEMTIME& st, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
-		char s[64];
+	static tstring FormatTime( const SYSTEMTIME& st, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
+		TCHAR s[64];
 		const int count = GetTimeFormat( locale, dwFlags, &st, lpFormat, s, 64 ) - 1;
-		if ( count <= 0 ) return "";
-		return string( s, count );
+		if ( count <= 0 ) return _T("");
+		return tstring( s, count );
 	}
-	string FormatDate( DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
-		char s[64];
+	tstring FormatDate( DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) const {
+		TCHAR s[64];
 		const SYSTEMTIME st = *this;
 		const int count = GetDateFormat( locale, dwFlags, &st, lpFormat, s, 64 ) - 1;
-		if ( count <= 0 ) return "";
-		return string( s, count );
+		if ( count <= 0 ) return _T("");
+		return tstring( s, count );
 	}
-	static string FormatDate( const SYSTEMTIME& st, DWORD dwFlags = 0, const char* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
-		char s[64];
+	static tstring FormatDate( const SYSTEMTIME& st, DWORD dwFlags = 0, const TCHAR* lpFormat = 0, LCID locale = LOCALE_USER_DEFAULT ) {
+		TCHAR s[64];
 		const int count = GetDateFormat( locale, dwFlags, &st, lpFormat, s, 64 ) - 1;
-		if ( count <= 0 ) return "";
-		return string( s, count );
+		if ( count <= 0 ) return _T("");
+		return tstring( s, count );
 	}
 #endif
 	bool operator==( FILETIME ft ) const {
@@ -1060,9 +1063,9 @@ public:
 		return GetMenuState( hMenu, id, b_command?MF_BYCOMMAND:MF_BYPOSITION );
 	}
 #ifndef SKIP_STL
-	string GetString( int id, bool b_command = true ) const;
+	tstring GetString( int id, bool b_command = true ) const;
 #else
-	int GetString( int id, LPSTR lpString, int max_chars, bool b_command = true ) const {
+	int GetString( int id, LPTSTR lpString, int max_chars, bool b_command = true ) const {
 		return GetMenuString( hMenu, id, lpString, max_chars, b_command?MF_BYCOMMAND:MF_BYPOSITION );
 	}
 #endif
@@ -1120,7 +1123,7 @@ public:
 **********************************************************************************************/
 
 class WindowClass: public NonCopyAble {
-	char szClassName[16];
+	TCHAR szClassName[16];
 public:
 	WindowClass( UINT style = CS_HREDRAW | CS_VREDRAW,
 		int cbClsExtra = 0,
@@ -1300,9 +1303,9 @@ public:
 		return GetWindowTextLength( hWnd ); 
 	}
 #ifndef SKIP_STL
-	string GetText() const;
+	tstring GetText() const;
 #else
-	int GetText( char* buf, int buf_size ) const {
+	int GetText( TCHAR* buf, int buf_size ) const {
 		return GetWindowText( hWnd, buf, buf_size );
 	}
 #endif
@@ -1860,19 +1863,19 @@ public:
 		return RegDeleteValue( hKey, lpValueName );
 	}
 #ifdef SKIP_STL
-	int EnumKey( DWORD dwIndex, LPSTR lpName, LPDWORD lpcName, PFILETIME lpftLastWriteTime = 0 ) const {
+	int EnumKey( DWORD dwIndex, LPTSTR lpName, LPDWORD lpcName, PFILETIME lpftLastWriteTime = 0 ) const {
 		return RegEnumKeyEx( hKey, dwIndex, lpName, lpcName, 0, 0, 0, lpftLastWriteTime );
 	}
 #else
-	int EnumKey( DWORD dwIndex, string* p_name, PFILETIME lpftLastWriteTime = 0 ) const;
+	int EnumKey( DWORD dwIndex, tstring* p_name, PFILETIME lpftLastWriteTime = 0 ) const;
 	struct ENUMKEY {
-		string name;
-		string key_class;
+		tstring name;
+		tstring key_class;
 		FILETIME last_file_time;
 	};
 	typedef vector< ENUMKEY > ENUMKEYS;
 	int EnumKeys( ENUMKEYS* p_keys ) const;
-	int EnumKeys( vector<string>* p_keys ) const;
+	int EnumKeys( vector<tstring>* p_keys ) const;
 #endif
 	int QueryInfo( LPDWORD lpcSubKeys, LPDWORD lpcbMaxSubKeyLen = 0, LPDWORD lpcValues = 0, LPDWORD lpcbMaxValueNameLen = 0, LPDWORD lpcbMaxValueLen = 0, LPDWORD lpcbSecurityDescriptor = 0, PFILETIME lpftLastWriteTime = 0 ) const {
 		return RegQueryInfoKey( hKey, 0, 0, 0, lpcSubKeys, lpcbMaxSubKeyLen, 0, lpcValues, lpcbMaxValueNameLen, lpcbMaxValueLen, lpcbSecurityDescriptor, lpftLastWriteTime );
@@ -1901,7 +1904,7 @@ public:
 		return QueryValue( lpValueName, lpValue, &data_size );
 	}
 #ifndef SKIP_STL
-	int QueryValue( LPCTSTR lpValueName, string* p_string, LPDWORD lpType = 0 ) const;
+	int QueryValue( LPCTSTR lpValueName, tstring* p_string, LPDWORD lpType = 0 ) const;
 #endif
 	int Replace( LPCTSTR lpSubKey, LPCTSTR lpNewFile, LPCTSTR lpOldFile ) const {
 		return RegReplaceKey( hKey, lpSubKey, lpNewFile, lpOldFile );
@@ -2054,10 +2057,10 @@ public:
 		return ::DrawText( hdc, lpString, nCount, &rc, uFormat );
 	}
 	int DrawText( LPCTSTR lpString, RECT& rc, UINT uFormat = DT_LEFT | DT_TOP ) const {
-		return DrawText( lpString, static_cast<int>( strlen(lpString) ), rc, uFormat );
+		return DrawText( lpString, static_cast<int>( _tcslen(lpString) ), rc, uFormat );
 	}
 #ifndef SKIP_STL
-	int DrawText( const string& str, RECT& rc, UINT uFormat = DT_LEFT | DT_TOP ) const {
+	int DrawText( const tstring& str, RECT& rc, UINT uFormat = DT_LEFT | DT_TOP ) const {
 		return DrawText( str.data(), static_cast<int>( str.length() ), rc, uFormat );
 	}
 #endif
@@ -2065,10 +2068,10 @@ public:
 		return ::TextOut( hdc, pt.x, pt.y, lpString, nCount ) != FALSE;
 	}
 	bool TextOut( const POINT& pt, LPCTSTR lpString ) const {
-		return TextOut( pt, lpString, static_cast<int>( strlen(lpString) ) );
+		return TextOut( pt, lpString, static_cast<int>( _tcslen(lpString) ) );
 	}
 #ifndef SKIP_STL
-	bool TextOut( const POINT& pt, const string& str ) const {
+	bool TextOut( const POINT& pt, const tstring& str ) const {
 		return TextOut( pt, str.data(), static_cast<int>( str.length() ) );
 	}
 #endif
@@ -2428,7 +2431,7 @@ public:
 	Button(): Control( 0 ) { }
 	Button( HWND hwnd ): Control( hwnd ) { }
 	bool Create( LPCTSTR lpszText, const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = BS_PUSHBUTTON, DWORD dwExStyle = 0 ) {
-		return Control::Create( "BUTTON", lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("BUTTON"), lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	void Click() const {
 		SendMessage( BM_CLICK );
@@ -2515,7 +2518,7 @@ public:
 	ComboBox(): Control( 0 ) { }
 	ComboBox( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = CBS_DROPDOWN | CBS_AUTOHSCROLL, DWORD dwExStyle = 0 ) {
-		return Control::Create( "COMBOBOX", "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("COMBOBOX"), _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	int AddString( LPCTSTR lpString ) const {
 		return SendMessage( CB_ADDSTRING, 0, reinterpret_cast<LPARAM>( lpString ) );
@@ -2604,7 +2607,7 @@ public:
 		return SendMessage( CB_GETLBTEXTLEN, nIndex );
 	}
 #ifndef SKIP_STL
-	string GetLBText( int nIndex ) const;
+	tstring GetLBText( int nIndex ) const;
 #else
 	int GetLBText( int nIndex, char* buf ) const {
 		return SendMessage( CB_GETLBTEXT, nIndex, reinterpret_cast<LPARAM>(buf) );
@@ -2641,7 +2644,7 @@ public:
 	Edit(): Control( 0 ) { }
 	Edit( HWND hwnd ): Control( hwnd ) { }
 	bool Create( LPCTSTR lpszText, const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = ES_LEFT | ES_AUTOHSCROLL, DWORD dwExStyle = 0 ) {
-		return Control::Create( "EDIT", lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("EDIT"), lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	bool CanUndo() const {
 		return SendMessage( EM_CANUNDO ) != FALSE;
@@ -2665,7 +2668,7 @@ public:
 		return SendMessage( EM_GETLIMITTEXT );
 	}
 #ifndef SKIP_STL
-	string GetLine( int nLine ) const;
+	tstring GetLine( int nLine ) const;
 #else
 	int GetLine( int nLine, char* buf ) const {
 		return SendMessage( EM_GETLINE, nLine, reinterpret_cast<LPARAM>(buf) );
@@ -2763,7 +2766,7 @@ public:
 	ListBox(): Control( 0 ) { }
 	ListBox( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = 0, DWORD dwExStyle = 0 ) {
-		return Control::Create( "LISTBOX", "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("LISTBOX"), _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	int AddFile( LPCTSTR lpFilename ) const {
 		return SendMessage( LB_ADDFILE, 0, reinterpret_cast<LPARAM>( lpFilename ) );
@@ -2828,7 +2831,7 @@ public:
 		return SendMessage( LB_GETTEXTLEN, nIndex );
 	}
 #ifndef SKIP_STL
-	string GetText( int nIndex ) const;
+	tstring GetText( int nIndex ) const;
 #else
 	int GetText( int nIndex, char* buf ) const {
 		return SendMessage( LB_GETTEXT, nIndex, reinterpret_cast<LPARAM>(buf) );
@@ -2902,7 +2905,7 @@ public:
 	Static(): Control( 0 ) { }
 	Static( HWND hwnd ): Control( hwnd ) { }
 	bool Create( LPCTSTR lpszText, const RECT& rc, HWND hwndParent, int id = -1, DWORD dwStyle = SS_LEFT, DWORD dwExStyle = 0 ) {
-		return Control::Create( "STATIC", lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("STATIC"), lpszText, rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	HICON GetIcon() const {
 		return windows_cast<HICON>( SendMessage( STM_GETICON ) );
@@ -2933,7 +2936,7 @@ public:
 	ScrollBar(): Control( 0 ) { }
 	ScrollBar( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = SBS_HORZ, DWORD dwExStyle = 0 ) {
-		return Control::Create( "SCROLLBAR", "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( _T("SCROLLBAR"), _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	bool EnableArrows( int fArrows ) const {
 		return SendMessage( SBM_ENABLE_ARROWS, fArrows ) != FALSE;
@@ -3101,7 +3104,7 @@ public:
 	HeaderControl(): Control( 0 ) { }
 	HeaderControl( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = HDS_HORZ | HDS_BUTTONS | HDS_DRAGDROP | HDS_FULLDRAG, DWORD dwExStyle = 0 ) {
-		return Control::Create( WC_HEADER, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( WC_HEADER, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	ImageList CreateDragImage( int nIndex ) const {
 		return Header_CreateDragImage( hWnd, nIndex );
@@ -3134,7 +3137,7 @@ public:
 		HDITEM item;
 		ZeroMemory( &item, sizeof( item ) );
 		item.mask = HDI_TEXT | HDI_FORMAT | HDI_WIDTH | HDI_LPARAM;
-		item.pszText = const_cast<LPSTR>( lpszText );
+		item.pszText = const_cast<LPTSTR>( lpszText );
 		item.cxy = width;
 		item.fmt = fmt;
 		item.lParam = lParam;
@@ -3163,7 +3166,7 @@ public:
 		HDITEM item;
 		ZeroMemory( &item, sizeof( item ) );
 		item.mask = HDI_TEXT;
-		item.pszText = const_cast<LPSTR>( lpszText );
+		item.pszText = const_cast<LPTSTR>( lpszText );
 		return SetItem( nIndex, item );
 	}
 	bool SetItemFormat( int nIndex, int fmt = HDF_LEFT | HDF_STRING ) const {
@@ -3190,7 +3193,7 @@ public:
 	HotKey(): Control( 0 ) { }
 	HotKey( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = 0, DWORD dwExStyle = 0 ) {
-		return Control::Create( HOTKEY_CLASS, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( HOTKEY_CLASS, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	int GetHotKey() const {
 		return SendMessage( HKM_GETHOTKEY ) & 0xFF;
@@ -3235,7 +3238,7 @@ public:
 		info.hwnd = hwnd;
 		info.uId = windows_cast<UINT>( hwndTool );
 		info.hinst = hInstance;
-		info.lpszText = const_cast<char*>( pszText );
+		info.lpszText = const_cast<TCHAR*>( pszText );
 		return AddTool( &info );
 	}
 	bool AddTool( UINT uId, HWND hwnd, const RECT& rc, LPCTSTR pszText, UINT uFlags = 0, HINSTANCE hInstance = 0 ) const {
@@ -3247,7 +3250,7 @@ public:
 		info.rect = rc;
 		info.uId = uId;
 		info.hinst = hInstance;
-		info.lpszText = const_cast<char*>( pszText );
+		info.lpszText = const_cast<TCHAR*>( pszText );
 		return AddTool( &info );
 	}
 	void DelTool( TOOLINFO* pToolInfo ) const {
@@ -3347,7 +3350,7 @@ public:
 		info.hwnd = hwnd;
 		info.uId = windows_cast<UINT>( hwndTool );
 		info.hinst = hInstance;
-		info.lpszText = const_cast<char*>( pszText );
+		info.lpszText = const_cast<TCHAR*>( pszText );
 		UpdateTipText( &info );
 	}
 	void UpdateTipText( UINT uId, HWND hwnd, LPCTSTR pszText, HINSTANCE hInstance = 0 ) const {
@@ -3357,7 +3360,7 @@ public:
 		info.hwnd = hwnd;
 		info.uId = uId;
 		info.hinst = hInstance;
-		info.lpszText = const_cast<char*>( pszText );
+		info.lpszText = const_cast<TCHAR*>( pszText );
 		UpdateTipText( &info );
 	}
 	GenericWindow WindowFromPoint( const POINT& pt ) const {
@@ -3374,7 +3377,7 @@ public:
 	ListView(): Control( 0 ) { }
 	ListView( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = LVS_REPORT | LVS_SINGLESEL, DWORD dwExStyle = 0 ) {
-		return Control::Create( WC_LISTVIEW, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( WC_LISTVIEW, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	WPoint ApproximateViewRect( const POINT& pt, int iCount ) const {
 		DWORD ret = ListView_ApproximateViewRect( hWnd, pt.x, pt.y, iCount );
@@ -3497,7 +3500,7 @@ public:
 		return ListView_GetItemState( hWnd, i, mask );
 	}
 #ifndef SKIP_STL
-	string GetItemText( int iItem, int iSubItem = 0 ) const;
+	tstring GetItemText( int iItem, int iSubItem = 0 ) const;
 #else
 	void GetItemText( int iItem, int iSubItem, char* buf, int buf_size ) const {
 		ListView_GetItemText( hWnd, iItem, iSubItem, buf, buf_size );
@@ -3561,7 +3564,7 @@ public:
 		column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		column.fmt = fmt;
 		column.cx = width;
-		column.pszText = const_cast<char*>( pszText );
+		column.pszText = const_cast<TCHAR*>( pszText );
 		column.iSubItem = nColumn;
 		return InsertColumn( nColumn, column );
 	}
@@ -3574,7 +3577,7 @@ public:
 		item.mask = LVIF_TEXT;
 		item.iItem = nItem;
 		item.iSubItem = 0;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		return InsertItem( item );
 	}
 	int InsertItem( int nItem, LPCTSTR pszText, int nImage, int lParam = 0 ) const {
@@ -3583,16 +3586,16 @@ public:
 		item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 		item.iItem = nItem;
 		item.iSubItem = 0;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		item.iImage = nImage;
 		item.lParam = lParam;
 		return InsertItem( item );
 	}
 #ifndef SKIP_STL
-	int InsertItem( const vector<string>& vSubItems, int nImage, int lParam = 0 ) const {
+	int InsertItem( const vector<tstring>& vSubItems, int nImage, int lParam = 0 ) const {
 		if ( vSubItems.empty() ) return -1;
 		const int nItem = InsertItem( GetItemCount(), vSubItems[0].c_str(), nImage, lParam );
-		typedef vector<string> VS;
+		typedef vector<tstring> VS;
 		VS::const_iterator p = vSubItems.begin();
 		for ( int nSubItem=1; ++p != vSubItems.end(); nSubItem++ )
 			SetItem( nItem, nSubItem, p->c_str() );
@@ -3623,7 +3626,7 @@ public:
 		column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		column.fmt = fmt;
 		column.cx = width;
-		column.pszText = const_cast<char*>( pszText );
+		column.pszText = const_cast<TCHAR*>( pszText );
 		column.iSubItem = iCol;
 		return SetColumn( iCol, column );
 	}
@@ -3664,7 +3667,7 @@ public:
 		item.mask = LVIF_TEXT;
 		item.iItem = nItem;
 		item.iSubItem = nSubItem;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		return SetItem( item );
 	}
 	bool SetItem( int nItem, int nSubItem, LPCTSTR pszText, int nImage ) const {
@@ -3673,7 +3676,7 @@ public:
 		item.mask = LVIF_TEXT | LVIF_IMAGE;
 		item.iItem = nItem;
 		item.iSubItem = nSubItem;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		item.iImage = nImage;
 		return SetItem( item );
 	}
@@ -3682,15 +3685,15 @@ public:
 		item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;
 		item.iItem = nItem;
 		item.iSubItem = nSubItem;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		item.iImage = nImage;
 		item.lParam = lParam;
 		return SetItem( item );
 	}
 #ifndef SKIP_STL
-	bool SetItem( int nItem, const vector<string>& vSubItems, int nImage, int lParam = 0 ) const {
+	bool SetItem( int nItem, const vector<tstring>& vSubItems, int nImage, int lParam = 0 ) const {
 		if ( vSubItems.empty() ) return false;
-		typedef vector<string> VS;
+		typedef vector<tstring> VS;
 		VS::const_iterator p = vSubItems.begin();
 		for ( int nSubItem=0 ; p != vSubItems.end(); p++, nSubItem++ )
 			if ( nSubItem == 0 ) {
@@ -3720,8 +3723,8 @@ public:
 		LVITEM item; item.state = state; item.stateMask = mask;
 		return SendMessage( LVM_SETITEMSTATE, i, reinterpret_cast<LPARAM>( &item ) ) != FALSE;
 	}
-	void SetItemText( LPCSTR pszText, int nItem, int iSubItem = 0 ) const {
-		ListView_SetItemText( hWnd, nItem, iSubItem, const_cast<char*>( pszText ) );
+	void SetItemText( LPCTSTR pszText, int nItem, int iSubItem = 0 ) const {
+		ListView_SetItemText( hWnd, nItem, iSubItem, const_cast<TCHAR*>( pszText ) );
 	}
 	int SetSelectionMark( int nIndex ) const {
 		return ListView_SetSelectionMark( hWnd, nIndex );
@@ -3768,7 +3771,7 @@ public:
 	ProgressBar(): Control( 0 ) { }
 	ProgressBar( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = 0, DWORD dwExStyle = 0 ) {
-		return Control::Create( PROGRESS_CLASS, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( PROGRESS_CLASS, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	int DeltaPos( int nIncrement ) const {
 		return SendMessage( PBM_DELTAPOS, nIncrement );
@@ -3811,7 +3814,7 @@ public:
 	Rebar(): Control( 0 ) { }
 	Rebar( HWND hwnd ): Control( hwnd ) { }
 	bool Create( HWND hwndParent, int id = -1, DWORD dwStyle = WS_CLIPSIBLINGS | WS_CLIPCHILDREN | RBS_VARHEIGHT | CCS_NODIVIDER, DWORD dwExStyle = 0 ) {
-		return Control::Create( REBARCLASSNAME, "", WRect(0,0,0,0), hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( REBARCLASSNAME, _T(""), WRect(0,0,0,0), hwndParent, id, dwStyle, dwExStyle );
 	}
 	void BeginDrag( int nBand, int nPos ) const {
 		SendMessage( RB_BEGINDRAG, nBand, nPos );
@@ -3904,7 +3907,7 @@ public:
 		rbi.cbSize = sizeof( rbi );
 		rbi.fMask = RBBIM_TEXT | RBBIM_STYLE | RBBIM_CHILD | RBBIM_CHILDSIZE | RBBIM_SIZE | RBBIM_IDEALSIZE;
 		rbi.fStyle = fStyle;
-		rbi.lpText = const_cast<LPSTR>( lpszText );
+		rbi.lpText = const_cast<LPTSTR>( lpszText );
 		rbi.hwndChild = hwndChild;
 		rbi.cyMinChild = size.cy;
 		rbi.cx = rbi.cxMinChild = rbi.cxIdeal = size.cx + 4;
@@ -3973,7 +3976,7 @@ public:
 	StatusBar(): Control( 0 ) { }
 	StatusBar( HWND hwnd ): Control( hwnd ) { }
 	bool Create( HWND hwndParent, int id = -1, DWORD dwStyle = SBS_SIZEGRIP, DWORD dwExStyle = 0 ) {
-		return Control::Create( STATUSCLASSNAME, "", WRect(0,0,0,0), hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( STATUSCLASSNAME, _T(""), WRect(0,0,0,0), hwndParent, id, dwStyle, dwExStyle );
 	}
 	bool GetBorders( int* borders ) const {
 		return SendMessage( SB_GETBORDERS, 0, reinterpret_cast<LPARAM>( borders ) ) != 0;
@@ -3994,13 +3997,13 @@ public:
 		return LOWORD( SendMessage( SB_GETTEXTLENGTH, nPart ) );
 	}
 #ifndef SKIP_STL
-	string GetText( int nPart ) const;
-	string GetTipText( int nPart ) const;
+	tstring GetText( int nPart ) const;
+	tstring GetTipText( int nPart ) const;
 #else
-	int GetText( int nPart, char* buf ) const {
+	int GetText( int nPart, TCHAR* buf ) const {
 		return SendMessage( SB_GETTEXT, nPart, reinterpret_cast<LPARAM>( buf ) );
 	}
-	void GetTipText( int nPart, char* buf, int buf_size ) const {
+	void GetTipText( int nPart, TCHAR* buf, int buf_size ) const {
 		SendMessage( SB_GETTIPTEXT, MAKEWPARAM( nPart, buf_size ), reinterpret_cast<LPARAM>( buf ) );
 	}
 #endif
@@ -4045,7 +4048,7 @@ public:
 	TabControl(): Control( 0 ) { }
 	TabControl( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id = -1, DWORD dwStyle = TCS_MULTILINE | TCS_TOOLTIPS, DWORD dwExStyle = 0 ) {
-		return Control::Create( WC_TABCONTROL, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( WC_TABCONTROL, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	void AdjustRect( RECT* prc, bool bLarger ) const {
 		TabCtrl_AdjustRect( hWnd, bLarger, prc );
@@ -4077,7 +4080,7 @@ public:
 		return TabCtrl_GetItem( hWnd, nItem, pitem ) != FALSE;
 	}
 #ifndef SKIP_STL
-	string GetItemText( int nItem ) const;
+	tstring GetItemText( int nItem ) const;
 #endif
 	int GetItemImage( int nItem ) const {
 		TCITEM item;
@@ -4128,7 +4131,7 @@ public:
 	int InsertItem( int nItem, LPCTSTR pszText, int nImage = -1, int lParam = 0 ) const {
 		TCITEM item;
 		item.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		item.iImage = nImage;
 		item.lParam = lParam;
 		return InsertItem( nItem, item );
@@ -4154,7 +4157,7 @@ public:
 	bool SetItem( int nItem, LPCTSTR pszText, int nImage = -1, int lParam = 0 ) const {
 		TCITEM item;
 		item.mask = TCIF_TEXT | TCIF_IMAGE | TCIF_PARAM;
-		item.pszText = const_cast<char*>( pszText );
+		item.pszText = const_cast<TCHAR*>( pszText );
 		item.iImage = nImage;
 		item.lParam = lParam;
 		return SetItem( nItem, item );
@@ -4285,9 +4288,9 @@ public:
 		return WSize( LOWORD( s ), HIWORD( s ) );
 	}
 #ifndef SKIP_STL
-	string GetButtonText( int idCommand ) const;
+	tstring GetButtonText( int idCommand ) const;
 #else
-	int GetButtonText( int idCommand, char* buf ) const {
+	int GetButtonText( int idCommand, TCHAR* buf ) const {
 		return SendMessage( TB_GETBUTTONTEXT, idCommand, reinterpret_cast<LPARAM>( buf ) );
 	}
 #endif
@@ -4498,7 +4501,7 @@ public:
 	Trackbar(): Control( 0 ) { }
 	Trackbar( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = TBS_HORZ | TBS_BOTTOM | TBS_AUTOTICKS, DWORD dwExStyle = 0 ) {
-		return Control::Create( TRACKBAR_CLASS, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( TRACKBAR_CLASS, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	void ClearSel( bool bRedraw = true ) const {
 		SendMessage( TBM_CLEARSEL, bRedraw );
@@ -4672,7 +4675,7 @@ public:
 		return TreeView_GetItem( hWnd, pItem ) != FALSE;
 	}
 #ifndef SKIP_STL
-	string GetItemText() const;
+	tstring GetItemText() const;
 #endif
 	bool GetItemImage( int* pImage, int* pSelectedImage ) const {
 		TVITEM item;
@@ -4719,7 +4722,7 @@ public:
 	TreeItem InsertItem( HTREEITEM hInsertAfter, LPCTSTR lpszText, int nImage, int nSelectedImage, int nState, int lParam ) const {
 		TVITEM item;
 		item.mask = TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE | TVIF_STATE | TVIF_PARAM;
-		item.pszText = const_cast<char*>( lpszText );
+		item.pszText = const_cast<TCHAR*>( lpszText );
 		item.iImage = nImage;
 		item.iSelectedImage = nSelectedImage;
 		item.state = nState;
@@ -4777,7 +4780,7 @@ public:
 	bool SetItem( LPCTSTR lpszText, int nImage, int nSelectedImage ) const {
 		TVITEM item;
 		item.mask = TVIF_HANDLE | TVIF_TEXT | TVIF_IMAGE | TVIF_SELECTEDIMAGE;
-		item.pszText = const_cast<char*>( lpszText );
+		item.pszText = const_cast<TCHAR*>( lpszText );
 		item.iImage = nImage;
 		item.iSelectedImage = nSelectedImage;
 		return SetItem( item );
@@ -4817,7 +4820,7 @@ public:
 	TreeView(): Control( 0 ) { }
 	TreeView( HWND hwnd ): Control( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_SHOWSELALWAYS, DWORD dwExStyle = 0 ) {
-		return Control::Create( WC_TREEVIEW, "", rc, hwndParent, id, dwStyle, dwExStyle );
+		return Control::Create( WC_TREEVIEW, _T(""), rc, hwndParent, id, dwStyle, dwExStyle );
 	}
 	bool DeleteAllItems() const {
 		return TreeView_DeleteAllItems( hWnd ) != FALSE;
@@ -4935,7 +4938,7 @@ public:
 	ComboBoxEx() { }
 	ComboBoxEx( HWND hwnd ): ComboBox( hwnd ) { }
 	bool Create( const RECT& rc, HWND hwndParent, int id, DWORD dwStyle = CBS_DROPDOWN | CBS_AUTOHSCROLL ) {
-		return Control::Create( WC_COMBOBOXEX, "", rc, hwndParent, id, dwStyle );
+		return Control::Create( WC_COMBOBOXEX, _T(""), rc, hwndParent, id, dwStyle );
 	}
 	int DeleteItem( int nIndex ) const {
 		return SendMessage( CBEM_DELETEITEM, nIndex );
@@ -4956,7 +4959,7 @@ public:
 		return SendMessage( CBEM_GETITEM, 0, reinterpret_cast<LPARAM>( pCBItem ) ) != 0;
 	}
 #ifndef SKIP_STL
-	string GetItemText( int nItem ) const;
+	tstring GetItemText( int nItem ) const;
 #endif
 	bool GetItemImage( int nItem, int* nImage, int* nSelectedImage ) const {
 		COMBOBOXEXITEM item;
@@ -4988,7 +4991,7 @@ public:
 		COMBOBOXEXITEM item;
 		item.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE | CBEIF_LPARAM;
 		item.iItem = nItem;
-		item.pszText = const_cast<char*>( lpszText );
+		item.pszText = const_cast<TCHAR*>( lpszText );
 		item.iImage = nImage;
 		item.iSelectedImage = nSelectedImage;
 		item.lParam = lParam;
@@ -5016,7 +5019,7 @@ public:
 		COMBOBOXEXITEM item;
 		item.mask = CBEIF_TEXT | CBEIF_IMAGE | CBEIF_SELECTEDIMAGE;
 		item.iItem = nItem;
-		item.pszText = const_cast<char*>( lpszText );
+		item.pszText = const_cast<TCHAR*>( lpszText );
 		item.iImage = nImage;
 		item.iSelectedImage = nSelectedImage;
 		return SetItem( &item );
@@ -5146,16 +5149,16 @@ public:
 
 class GetFileNameDialog: public OPENFILENAME {
 	enum { FILENAME_LENGTH = 2*MAX_PATH };
-	char filename[ FILENAME_LENGTH ];
+	TCHAR filename[ FILENAME_LENGTH ];
 public:
 	GetFileNameDialog( const OPENFILENAME& ofn ) { *this = ofn; }
 	GetFileNameDialog(
 				HWND hwndParent = 0,
-				const char* lpstrFilter = "All Files (*.*)\0*.*\0",
+				const TCHAR* lpstrFilter = _T("All Files (*.*)\0*.*\0"),
 				DWORD Flags = OFN_EXPLORER | OFN_HIDEREADONLY,
-				const char* lpstrFileName = "",
-				const char* lpstrDialogTitle = 0,
-				const char* lpstrDefaultExtension = 0 ) {
+				const TCHAR* lpstrFileName = _T(""),
+				const TCHAR* lpstrDialogTitle = 0,
+				const TCHAR* lpstrDefaultExtension = 0 ) {
 		OPENFILENAME& ofn = *this;
 		ZeroMemory( &ofn, sizeof( ofn ) );
 		ofn.lStructSize = sizeof( OPENFILENAME );
@@ -5175,21 +5178,21 @@ public:
 
 	void SetFilterIndex( int index ) { nFilterIndex = static_cast<DWORD>( index ); }
 	int GetFilterIndex() const { return nFilterIndex; }
-	void SetFileName( const char* lpstrFileName ) {
+	void SetFileName( const TCHAR* lpstrFileName ) {
 		#ifdef _MSC_VER
 		#pragma warning(push)
 		#pragma warning(disable : 4996)
 		#endif
 		// Ensure that the end of the buffer is null terminated
-		strncpy( filename, lpstrFileName, FILENAME_LENGTH );
+		_tcsncpy( filename, lpstrFileName, FILENAME_LENGTH );
 		filename[FILENAME_LENGTH - 1] = '\0';
 		#ifdef _MSC_VER
 		#pragma warning(pop)
 		#endif
 	}
-	const char* GetPathName() const { return filename; }
-	const char* GetFileName() const { return filename + nFileOffset; }
-	const char* GetExtension() const { return filename + nFileExtension; }
+	const TCHAR* GetPathName() const { return filename; }
+	const TCHAR* GetFileName() const { return filename + nFileOffset; }
+	const TCHAR* GetExtension() const { return filename + nFileExtension; }
 	int GetFileNameOffset() const { return nFileOffset; }
 	int GetExtensionOffset() const { return nFileExtension; }
 };
@@ -5199,7 +5202,7 @@ public:
 **********************************************************************************************/
 
 class GetFolderDialog: public BROWSEINFO {
-	char foldername[ MAX_PATH ];
+	TCHAR foldername[ MAX_PATH ];
 	LPCITEMIDLIST lpiil;
 public:
 	GetFolderDialog( HWND hwndParent = 0, LPCTSTR lpszTitle = 0, UINT ulFlags = 0, LPCITEMIDLIST pidlRoot = 0 ) {
@@ -5214,7 +5217,7 @@ public:
 		if ( lpiil == NULL ) return false;
 		return SHGetPathFromIDList( lpiil, foldername ) != FALSE;
 	}
-	const char* GetFolderName() const { return foldername; }
+	const TCHAR* GetFolderName() const { return foldername; }
 	LPCITEMIDLIST GetIDList() const { return lpiil; }
 };
 
@@ -5523,8 +5526,6 @@ public:
 	}
 };
 
-} // namespace WinAPI
-
 /**********************************************************************************************
 * Library defined WinMain Macro
 **********************************************************************************************/
@@ -5533,5 +5534,8 @@ extern int WINAPI Lib_WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPS
 
 #define USE_LIB_WINMAIN \
 int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd ) { \
-  return Lib_WinMain(hInstance, hPrevInstance, lpCmdLine, nShowCmd ); \
+  return WinAPI::Lib_WinMain(hInstance, hPrevInstance, lpCmdLine, nShowCmd ); \
 }
+
+} // namespace WinAPI
+

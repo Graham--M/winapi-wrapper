@@ -1,104 +1,74 @@
-#-----------------------------------------------------------------------------
-# setup
-
+#=============================================================================
+# winapi library
+#
+# target names: winapi, winapi_examples (not built by default)
+#
 cmake_minimum_required (VERSION 3.4)
 
-# Don't need backwards compatable lib path inheritance
-cmake_policy (SET CMP0003 NEW)
+set (WINAPI_PROJECT_NAME winapi)
+
 
 
 #-----------------------------------------------------------------------------
-# target: winapi lib
+# Add the examples as targets to the winapi_examples pseudo-target
+set (EXAMPLES_TARGET_NAMES )
+add_subdirectory (examples)
+add_custom_target("${WINAPI_PROJECT_NAME}_examples")
+add_dependencies("${WINAPI_PROJECT_NAME}_examples" ${EXAMPLES_TARGET_NAMES})
 
-add_library (winapi STATIC
-  application.cpp
-  comboboxex_getitemtext.cpp
-  combobox_getlbtext.cpp
-  default_mdichild_class.cpp
-  default_window_class.cpp
-  dialog.cpp
-  dialog_enddialog.cpp
-  dialog_go1.cpp
-  dialog_go2.cpp
-  edit_getline.cpp
-  listbox_gettext.cpp
-  listview_getitemtext.cpp
-  mdichild.cpp
-  mdichild_defaultproc.cpp
-  mdiwindow.cpp
-  menu_getstring.cpp
-  modelessdialog_create1.cpp
-  modelessdialog_create2.cpp
-  modelessdialog_create3.cpp
-  regkey_deletekeytree.cpp
-  regkey_enum.cpp
-  regkey_enumkeys.cpp
-  regkey_enumkeys2.cpp
-  regkey_queryvalue.cpp
-  socket.cpp
-  statusbar_gettext.cpp
-  statusbar_gettiptext.cpp
-  tabcontrol_getitemtext.cpp
-  thread.cpp
-  toolbar_getbuttontext.cpp
-  treeitem_getitemtext.cpp
-  window.cpp
-  windowclass_constructor.cpp
-  window_class.cpp
-  window_defaultproc.cpp
-  window_gettext.cpp
-  winmain.cpp
+
+
+#-----------------------------------------------------------------------------
+# Create the library target
+project (${WINAPI_PROJECT_NAME})
+ 
+set (PROJECT_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set (PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+ 
+set (PROJECT_SRCS
+  ${PROJECT_SOURCE_DIR}/application.cpp
+  ${PROJECT_SOURCE_DIR}/comboboxex_getitemtext.cpp
+  ${PROJECT_SOURCE_DIR}/combobox_getlbtext.cpp
+  ${PROJECT_SOURCE_DIR}/default_mdichild_class.cpp
+  ${PROJECT_SOURCE_DIR}/default_window_class.cpp
+  ${PROJECT_SOURCE_DIR}/dialog.cpp
+  ${PROJECT_SOURCE_DIR}/dialog_enddialog.cpp
+  ${PROJECT_SOURCE_DIR}/dialog_go1.cpp
+  ${PROJECT_SOURCE_DIR}/dialog_go2.cpp
+  ${PROJECT_SOURCE_DIR}/edit_getline.cpp
+  ${PROJECT_SOURCE_DIR}/listbox_gettext.cpp
+  ${PROJECT_SOURCE_DIR}/listview_getitemtext.cpp
+  ${PROJECT_SOURCE_DIR}/mdichild.cpp
+  ${PROJECT_SOURCE_DIR}/mdichild_defaultproc.cpp
+  ${PROJECT_SOURCE_DIR}/mdiwindow.cpp
+  ${PROJECT_SOURCE_DIR}/menu_getstring.cpp
+  ${PROJECT_SOURCE_DIR}/modelessdialog_create1.cpp
+  ${PROJECT_SOURCE_DIR}/modelessdialog_create2.cpp
+  ${PROJECT_SOURCE_DIR}/modelessdialog_create3.cpp
+  ${PROJECT_SOURCE_DIR}/regkey_deletekeytree.cpp
+  ${PROJECT_SOURCE_DIR}/regkey_enum.cpp
+  ${PROJECT_SOURCE_DIR}/regkey_enumkeys.cpp
+  ${PROJECT_SOURCE_DIR}/regkey_enumkeys2.cpp
+  ${PROJECT_SOURCE_DIR}/regkey_queryvalue.cpp
+  ${PROJECT_SOURCE_DIR}/socket.cpp
+  ${PROJECT_SOURCE_DIR}/statusbar_gettext.cpp
+  ${PROJECT_SOURCE_DIR}/statusbar_gettiptext.cpp
+  ${PROJECT_SOURCE_DIR}/tabcontrol_getitemtext.cpp
+  ${PROJECT_SOURCE_DIR}/thread.cpp
+  ${PROJECT_SOURCE_DIR}/toolbar_getbuttontext.cpp
+  ${PROJECT_SOURCE_DIR}/treeitem_getitemtext.cpp
+  ${PROJECT_SOURCE_DIR}/window.cpp
+  ${PROJECT_SOURCE_DIR}/windowclass_constructor.cpp
+  ${PROJECT_SOURCE_DIR}/window_class.cpp
+  ${PROJECT_SOURCE_DIR}/window_defaultproc.cpp
+  ${PROJECT_SOURCE_DIR}/window_gettext.cpp
+  ${PROJECT_SOURCE_DIR}/winmain.cpp
 )
 
+add_library (${PROJECT_NAME} STATIC ${PROJECT_SRCS})
 
-#-----------------------------------------------------------------------------
-# target: sdi - single window example
-add_executable (sdi WIN32 Examples/sdi.cpp)
-target_include_directories (sdi PRIVATE . )
-target_link_libraries (sdi winapi)
-
-
-#-----------------------------------------------------------------------------
-# target: mdi - multiple document interface example
-add_executable (mdi WIN32 Examples/mdi.cpp)
-target_include_directories (mdi PRIVATE .)
-target_link_libraries (mdi winapi)
-
-
-#-----------------------------------------------------------------------------
-# target: dlg_modal - modal dialog example
-add_executable (dlg_modal WIN32
- Examples/Dialog/dlg_modal.cpp
- Examples/Dialog/dialog.rc
+target_include_directories ( ${PROJECT_NAME}
+  PUBLIC ${PROJECT_INCLUDE_DIR}
+  PRIVATE ${PROJECT_SOURCE_DIR}
 )
-target_include_directories (dlg_modal PRIVATE . Examples/Dialog/)
-target_link_libraries (dlg_modal winapi)
 
-
-#-----------------------------------------------------------------------------
-# target: dlg_modeless - modeless dialog example
-add_executable (dlg_modeless WIN32
- Examples/Dialog/dlg_modeless.cpp
- Examples/Dialog/dialog.rc
-)
-target_include_directories (dlg_modeless PRIVATE . Examples/Dialog/)
-target_link_libraries (dlg_modeless winapi)
-
-
-#-----------------------------------------------------------------------------
-# target: multithreading example
-add_executable (multithreading WIN32
- Examples/Multithreading/Multithreading.cpp
- Examples/Multithreading/Multithreading_.rc
-)
-target_include_directories (multithreading PRIVATE . Examples/Multithreading)
-target_link_libraries (multithreading winapi comctl32)
-
-
-#-----------------------------------------------------------------------------
-# Set output dir for examples
-set_target_properties (
-  sdi mdi dlg_modal dlg_modeless multithreading
- PROPERTIES
-  RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/Examples
-)

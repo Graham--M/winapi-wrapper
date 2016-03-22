@@ -3,12 +3,12 @@
 
 using namespace WinAPI;
 
-string ListBox::GetText( int nIndex ) const
+tstring ListBox::GetText( int nIndex ) const
 {
-	string s;
+	tstring s;
 	const int len = SendMessage( LB_GETTEXTLEN, nIndex );
 	if ( len == LB_ERR )
-		return "";
+		return _T("");
 	s.resize( len + 1 );
 	int len2 = SendMessage( LB_GETTEXT, nIndex, reinterpret_cast<LPARAM>( &s[0] ) );
 	if ( len2 < 0 ) len2 = 0;

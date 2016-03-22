@@ -3,9 +3,9 @@
 
 using namespace WinAPI;
 
-int RegKey::QueryValue( LPCTSTR lpValueName, string* p_string, LPDWORD lpType ) const
+int RegKey::QueryValue( LPCTSTR lpValueName, tstring* p_string, LPDWORD lpType ) const
 {
-	*p_string = "";
+	*p_string = _T("");
 	DWORD data_size = 0;
 	const int retval = QueryValueSize( lpValueName, &data_size, lpType );
 	if ( retval != ERROR_SUCCESS ) return retval;
