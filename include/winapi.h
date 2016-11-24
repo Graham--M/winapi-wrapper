@@ -1655,7 +1655,7 @@ protected:
 	virtual ~MDIFrameWindow();
 public:
 	MDIFrameWindow() { }
-	bool CreateClient( const RECT& rc = WRect(0,0,0,0), HMENU hMenu = 0, int idFirstChild = 10001, DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL, DWORD dwExStyle = WS_EX_CLIENTEDGE );
+	bool CreateClient( const RECT& rc = WRect(0,0,0,0), HMENU hMenu = 0, UINT idFirstChild = 10001, DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPCHILDREN | WS_VSCROLL | WS_HSCROLL, DWORD dwExStyle = WS_EX_CLIENTEDGE );
 	GenericWindow GetClientWindow() const { return client_wnd; }
 	virtual int HandleMessage( int uMsg, int wParam, int lParam );
 #ifndef PURE_WRAPPER
@@ -2295,7 +2295,7 @@ public:
 	Brush( COLORREF crColor, int fnStyle ) {
 		hgdiobj = ::CreateHatchBrush( fnStyle, crColor );
 	}
-	Brush( COLORREF crColor, int fnStyle, LONG lbHatch ) {
+	Brush( COLORREF crColor, UINT fnStyle, ULONG_PTR lbHatch ) {
 		LOGBRUSH lb = { fnStyle, crColor, lbHatch };
 		hgdiobj = ::CreateBrushIndirect( &lb );
 	}
@@ -4216,14 +4216,14 @@ public:
 			nBitmapSize.cy, nStructSize );
 		return IsCreated();
 	}
-	int AddBitmap( int nButtons, int id, HINSTANCE hinst = __MODULE_HANDLE ) const {
+	int AddBitmap( int nButtons, UINT id, HINSTANCE hinst = __MODULE_HANDLE ) const {
 		TBADDBITMAP tbab = { hinst, id };
 		return SendMessage( TB_ADDBITMAP, nButtons, reinterpret_cast<LPARAM>( &tbab ) );
 	}
 	bool AddButtons( LPTBBUTTON lpButtons, int nButtons ) const {
 		return SendMessage( TB_ADDBUTTONS, nButtons, reinterpret_cast<LPARAM>( lpButtons ) ) != 0;
 	}
-	bool AddButton( int nBitmap, int nCommand, int nState = TBSTATE_ENABLED, int nStyle = TBSTYLE_BUTTON, int nData = 0, int nString = -1 ) {
+	bool AddButton( int nBitmap, int nCommand, BYTE nState = TBSTATE_ENABLED, BYTE nStyle = TBSTYLE_BUTTON, DWORD_PTR nData = 0, INT_PTR nString = -1 ) {
 		TBBUTTON button = { nBitmap, nCommand, nState, nStyle,
 #if defined(_WIN32) | defined(_WIN64)
 		{0},
@@ -4366,8 +4366,12 @@ public:
 	bool InsertButton( int nButton, LPTBBUTTON lpButton ) const {
 		return SendMessage( TB_INSERTBUTTON, nButton, reinterpret_cast<LPARAM>( lpButton ) ) != 0;
 	}
-	bool InsertButton( int nButton, int nBitmap, int nCommand, int nState = TBSTATE_ENABLED, int nStyle = TBSTYLE_BUTTON, int nData = 0, int nString = -1 ) {
-		TBBUTTON button = { nBitmap, nCommand, nState, nStyle, nData, nString };
+	bool InsertButton( int nButton, int nBitmap, int nCommand, BYTE nState = TBSTATE_ENABLED, BYTE nStyle = TBSTYLE_BUTTON, DWORD_PTR nData = 0, INT_PTR nString = -1 ) {
+		TBBUTTON button = { nBitmap, nCommand, nState, nStyle,
+#if defined(_WIN32) | defined(_WIN64)
+		{0},
+#endif
+		nData, nString };
 		return InsertButton( nButton, &button );
 	}
 	bool InsertMarkHitTest( const POINT& pt, LPTBINSERTMARK lptbim ) const {

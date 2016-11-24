@@ -7,7 +7,7 @@ MDIFrameWindow::~MDIFrameWindow()
 {
 }
 
-bool MDIFrameWindow::CreateClient( const RECT& rc, HMENU hMenu, int idFirstChild, DWORD dwStyle, DWORD dwExStyle )
+bool MDIFrameWindow::CreateClient( const RECT& rc, HMENU hMenu, UINT idFirstChild, DWORD dwStyle, DWORD dwExStyle )
 {
 	if ( ! client_wnd.IsCreated() ) {
 		CLIENTCREATESTRUCT ccs = { hMenu, idFirstChild };
