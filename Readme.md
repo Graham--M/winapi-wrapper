@@ -3,7 +3,7 @@
 
 This is a C++ wrapper for WINAPI to take some of the clumsiness out of programming WIN32 applications. Most classes wrap the calls to the WINAPI functions so that they keep track of the handles for you and define some sensible defaults.
 
-Almost all the documentation in the origional repo help dir still applies and is recommended reading. However a major change is that the library default `WinMain` function must now be defined in your code for compatability with non MSCV linkers. You can easiliy do this using the `USE_LIB_WINMAIN` macro. For example the `sdi.cpp` example app is now:
+Almost all the documentation in the original repo help dir still applies and is recommended reading. However a major change is that the library default `WinMain` function must now be defined in your code for compatibility with non MSVC linkers. You can easily do this using the `USE_LIB_WINMAIN` macro. For example the `sdi.cpp` example app is as below:
 
 ```C++
 // Include main WinAPI Wrapper header
@@ -36,6 +36,6 @@ namespace {
 
 USE_LIB_WINMAIN
 ```
-This example assumes the UNICODE macro isn't defined for simplicity's sake. The real example supports ASCII and and UNICODE chars.
+This example assumes the `UNICODE` macro is NOT defined for simplicity's sake. The real example supports ASCII and UNICODE chars.
 
-All modifications are made available under the origional license of the library (see `license.txt`).
+All modifications are made available under the original license of the library (see [License.txt](License.txt)).
